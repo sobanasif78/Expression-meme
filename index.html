@@ -159,6 +159,27 @@
     border-radius: 4px;
     font-size: 0.78rem;
   }
+  #soundToggle {
+    background: var(--panel);
+    color: var(--text);
+    border: 1px solid #2a2f3d;
+    border-radius: 999px;
+    padding: 8px 16px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    margin-bottom: 20px;
+    transition: background 0.15s ease, transform 0.1s ease;
+  }
+  #soundToggle:hover {
+    background: #1e2230;
+  }
+  #soundToggle:active {
+    transform: scale(0.97);
+  }
+  #soundToggle.muted {
+    color: var(--muted);
+    border-color: #2a2f3d;
+  }
 </style>
 </head>
 <body>
@@ -166,6 +187,7 @@
   <h1>Expression <span>→</span> Meme</h1>
   <p class="subtitle">Make a face. Let the webcam judge you.</p>
   <div id="status">Loading models…</div>
+  <button id="soundToggle" type="button" aria-pressed="true">🔊 Sound on</button>
 
   <div class="stage">
     <div class="panel">

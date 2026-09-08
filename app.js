@@ -6,12 +6,119 @@ const overlay = document.getElementById("overlay");
 const statusEl = document.getElementById("status");
 const memeWrap = document.getElementById("memeWrap");
 const scoresEl = document.getElementById("scores");
+const soundToggle = document.getElementById("soundToggle");
 
 let pose = null;
 let hands = null;
 let latestPoseLandmarks = null;
 let latestHandsLandmarks = null; // array of hands, each an array of 21 landmarks
 let isDetecting = false;
+
+// ---------------------------------------------------------------
+// SOUND EFFECTS (synthesized with Web Audio API — no audio files
+// needed, so nothing to go missing). Each mood/gesture key maps to
+// a little function that plays a short, distinct sound.
+// To customize: edit/add entries in SOUND_LIBRARY, then reference
+// the key via `sound: "yourKey"` on any entry in memes.js.
+// To use real audio files instead: drop files in a sounds/ folder
+// and swap a library entry's body for `new Audio("sounds/x.mp3").play()`.
+// ---------------------------------------------------------------
+let audioCtx = null;
+let soundEnabled = true;
+
+function getAudioCtx() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state === "suspended") audioCtx.resume();
+  return audioCtx;
+}
+
+function playTone({ freq = 440, duration = 0.15, type = "sine", startGain = 0.2, delay = 0, glideTo = null }) {
+  const ctx = getAudioCtx();
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = type;
+  const t0 = ctx.currentTime + delay;
+  osc.frequency.setValueAtTime(freq, t0);
+  if (glideTo !== null) {
+    osc.frequency.exponentialRampToValueAtTime(Math.max(glideTo, 1), t0 + duration);
+  }
+  gain.gain.setValueAtTime(startGain, t0);
+  gain.gain.exponentialRampToValueAtTime(0.001, t0 + duration);
+  osc.connect(gain).connect(ctx.destination);
+  osc.start(t0);
+  osc.stop(t0 + duration + 0.02);
+}
+
+const SOUND_LIBRARY = {
+  happy: () => {
+    // cheerful little ascending arpeggio
+    [523, 659, 784, 1047].forEach((freq, i) =>
+      playTone({ freq, duration: 0.14, type: "triangle", startGain: 0.18, delay: i * 0.07 })
+    );
+  },
+  sad: () => {
+    // classic descending "sad trombone" glide
+    playTone({ freq: 300, glideTo: 110, duration: 0.9, type: "sawtooth", startGain: 0.15 });
+  },
+  angry: () => {
+    // harsh short buzz
+    playTone({ freq: 90, duration: 0.25, type: "sawtooth", startGain: 0.25 });
+    playTone({ freq: 80, duration: 0.25, type: "square", startGain: 0.15, delay: 0.05 });
+  },
+  surprised: () => {
+    // quick upward chime
+    playTone({ freq: 700, glideTo: 1400, duration: 0.18, type: "sine", startGain: 0.22 });
+  },
+  disgusted: () => {
+    // wobbly descending "eww"
+    playTone({ freq: 260, glideTo: 150, duration: 0.35, type: "square", startGain: 0.15 });
+  },
+  fearful: () => {
+    // tense rising sting
+    playTone({ freq: 220, glideTo: 440, duration: 0.4, type: "sawtooth", startGain: 0.14 });
+  },
+  neutral: () => {
+    // soft, barely-there tick
+    playTone({ freq: 500, duration: 0.06, type: "sine", startGain: 0.06 });
+  },
+  shush: () => {
+    playTone({ freq: 900, duration: 0.1, type: "sine", startGain: 0.12 });
+  },
+  flex: () => {
+    // rising "power up"
+    playTone({ freq: 150, glideTo: 500, duration: 0.5, type: "sawtooth", startGain: 0.2 });
+  },
+  shook: () => {
+    // sharp gasp-like blip
+    playTone({ freq: 1000, glideTo: 600, duration: 0.15, type: "triangle", startGain: 0.2 });
+  }
+};
+
+if (soundToggle) {
+  soundToggle.addEventListener("click", () => {
+    // First click also unlocks the AudioContext per browser autoplay policy
+    getAudioCtx();
+    soundEnabled = !soundEnabled;
+    soundToggle.textContent = soundEnabled ? "🔊 Sound on" : "🔇 Sound off";
+    soundToggle.setAttribute("aria-pressed", String(soundEnabled));
+    soundToggle.classList.toggle("muted", !soundEnabled);
+    if (soundEnabled) playSound("neutral");
+  });
+}
+
+function playSound(key) {
+  if (!soundEnabled) return;
+  const fn = SOUND_LIBRARY[key];
+  if (fn) {
+    try {
+      fn();
+    } catch (err) {
+      console.warn("Sound playback error:", err);
+    }
+  }
+}
 
 // ---------------------------------------------------------------
 // DETECTION TUNING: Latency vs Accuracy
@@ -314,21 +421,33 @@ async function startCamera() {
 // ---------------------------------------------------------------
 // UI & DISPLAY CONTROLLERS
 // ---------------------------------------------------------------
+function pickVariant(config) {
+  if (config.variants && config.variants.length > 0) {
+    const idx = Math.floor(Math.random() * config.variants.length);
+    return config.variants[idx];
+  }
+  // Backward-compatible: a config with flat emoji/label/caption/image fields
+  return config;
+}
+
 function updateMeme(key) {
   if (key === lastDisplayedKey) return;
   lastDisplayedKey = key;
 
   const config = MEME_MAP[key] || MEME_CONFIG.expressions.neutral;
+  const variant = pickVariant(config);
 
-  if (config.image) {
-    memeWrap.innerHTML = `<img class="meme-img" src="${config.image}" alt="${config.label}" />`;
+  if (variant.image) {
+    memeWrap.innerHTML = `<img class="meme-img" src="${variant.image}" alt="${variant.label || key}" />`;
   } else {
     memeWrap.innerHTML = `
-      <div class="meme-emoji" id="memeEmoji">${config.emoji || "🙂"}</div>
-      <div class="meme-label" id="memeLabel">${config.label}</div>
-      <div class="meme-caption" id="memeCaption">${config.caption || ""}</div>
+      <div class="meme-emoji" id="memeEmoji">${variant.emoji || "🙂"}</div>
+      <div class="meme-label" id="memeLabel">${variant.label || key}</div>
+      <div class="meme-caption" id="memeCaption">${variant.caption || ""}</div>
     `;
   }
+
+  playSound(config.sound || key);
 }
 
 function updateScores(expressions) {
