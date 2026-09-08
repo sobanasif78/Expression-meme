@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Expression → Meme</title>
+<style>
+  :root {
+    --bg: #0d0f14;
+    --panel: #161922;
+    --accent: #ffd23f;
+    --accent2: #ff5d5d;
+    --text: #f1f1f4;
+    --muted: #8a8f9c;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 32px 16px 64px;
+  }
+  h1 {
+    font-size: 1.8rem;
+    margin-bottom: 4px;
+    letter-spacing: 0.5px;
+  }
+  h1 span { color: var(--accent); }
+  p.subtitle {
+    color: var(--muted);
+    margin-top: 0;
+    margin-bottom: 28px;
+    font-size: 0.95rem;
+  }
+  #status {
+    margin-bottom: 16px;
+    font-size: 0.9rem;
+    color: var(--muted);
+    min-height: 1.2em;
+  }
+  .stage {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    justify-content: center;
+    width: 100%;
+    max-width: 980px;
+  }
+  .panel {
+    background: var(--panel);
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+    flex: 1 1 420px;
+    min-width: 300px;
+  }
+  .panel h2 {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    margin: 0 0 12px;
+  }
+  .video-wrap {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #000;
+  }
+  video, canvas {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+  }
+  .meme-wrap {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    border-radius: 12px;
+    background: #1e2230;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    text-align: center;
+    padding: 16px;
+    transition: background 0.25s ease;
+  }
+  .meme-emoji {
+    font-size: 4.5rem;
+    margin-bottom: 12px;
+    transition: transform 0.2s ease;
+  }
+  .meme-label {
+    font-size: 1.3rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .meme-caption {
+    color: var(--muted);
+    font-size: 0.85rem;
+    margin-top: 6px;
+  }
+  .meme-img {
+    max-width: 100%;
+    max-height: 100%;
+    border-radius: 8px;
+    object-fit: contain;
+  }
+  .scores {
+    margin-top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .score-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.78rem;
+  }
+  .score-label {
+    width: 78px;
+    color: var(--muted);
+    text-transform: capitalize;
+  }
+  .score-bar-bg {
+    flex: 1;
+    height: 6px;
+    background: #262b3a;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .score-bar-fill {
+    height: 100%;
+    background: var(--accent);
+    width: 0%;
+    transition: width 0.15s ease;
+  }
+  .hint {
+    margin-top: 28px;
+    max-width: 640px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.82rem;
+    line-height: 1.5;
+  }
+  code {
+    background: #1e2230;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 0.78rem;
+  }
+</style>
+</head>
+<body>
+
+  <h1>Expression <span>→</span> Meme</h1>
+  <p class="subtitle">Make a face. Let the webcam judge you.</p>
+  <div id="status">Loading models…</div>
+
+  <div class="stage">
+    <div class="panel">
+      <h2>Live Feed</h2>
+      <div class="video-wrap">
+        <video id="video" autoplay muted playsinline></video>
+        <canvas id="overlay"></canvas>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Detected Mood</h2>
+      <div class="meme-wrap" id="memeWrap">
+        <div class="meme-emoji" id="memeEmoji">🙂</div>
+        <div class="meme-label" id="memeLabel">Waiting…</div>
+        <div class="meme-caption" id="memeCaption">Show your face to the camera</div>
+      </div>
+      <div class="scores" id="scores"></div>
+    </div>
+  </div>
+
+  <div class="hint">
+    Drop your own meme images into the <code>memes/</code> folder (see <code>memes.js</code>)
+    and reference them in the <code>MEME_MAP</code> config to replace the placeholder
+    emoji + captions with real images per expression.
+  </div>
+
+  <!-- face-api.js from CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+  <script src="memes.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
