@@ -159,6 +159,46 @@
     border-radius: 4px;
     font-size: 0.78rem;
   }
+  .guide {
+    margin-top: 32px;
+    width: 100%;
+    max-width: 780px;
+  }
+  .guide h2 {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    margin: 0 0 14px;
+    text-align: center;
+  }
+  .guide-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 10px;
+  }
+  .guide-card {
+    background: var(--panel);
+    border-radius: 12px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .guide-emoji {
+    font-size: 1.6rem;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+  .guide-text .guide-label {
+    font-weight: 700;
+    font-size: 0.85rem;
+  }
+  .guide-text .guide-how {
+    color: var(--muted);
+    font-size: 0.78rem;
+    margin-top: 2px;
+  }
   #soundToggle {
     background: var(--panel);
     color: var(--text);
@@ -213,6 +253,11 @@
     Drop your own meme images into the <code>memes/</code> folder (see <code>memes.js</code>)
     and reference them in the <code>MEME_MAP</code> config to replace the placeholder
     emoji + captions with real images per expression.
+  </div>
+
+  <div class="guide">
+    <h2>How to trigger each meme</h2>
+    <div class="guide-grid" id="guideGrid"></div>
   </div>
 
   <!-- face-api.js from CDN -->

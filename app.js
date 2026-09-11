@@ -170,6 +170,32 @@ EXPRESSION_ORDER.forEach((key) => {
   scoresEl.appendChild(row);
 });
 
+// Build the "how to trigger" guide grid from MEME_MAP so it always
+// stays in sync with whatever moods/gestures are configured.
+const guideGrid = document.getElementById("guideGrid");
+if (guideGrid) {
+  const guideKeys = [...EXPRESSION_ORDER, ...Object.keys(GESTURE_MAP)];
+  guideKeys.forEach((key) => {
+    const config = MEME_MAP[key];
+    if (!config) return;
+    const variant = (config.variants && config.variants[0]) || config;
+    const emoji = variant.emoji || "🙂";
+    const label = variant.label || key;
+    const how = config.how || "Make the matching face or gesture";
+
+    const card = document.createElement("div");
+    card.className = "guide-card";
+    card.innerHTML = `
+      <div class="guide-emoji">${emoji}</div>
+      <div class="guide-text">
+        <div class="guide-label">${label}</div>
+        <div class="guide-how">${how}</div>
+      </div>
+    `;
+    guideGrid.appendChild(card);
+  });
+}
+
 // ---------------------------------------------------------------
 // GEOMETRIC UTILITIES
 // ---------------------------------------------------------------
@@ -401,23 +427,65 @@ function detectHandsBesideFace({ pose }) {
   return atFaceLevel(leftWrist, leftShoulder) && atFaceLevel(rightWrist, rightShoulder);
 }
 
+/**
+ * Kidnap Cat: one hand held close to/over the face, regardless of finger
+ * shape (broader than finger_mouth, which needs a specific fingertip
+ * near the mouth). Checked after the more specific hand-shape gestures
+ * so it only catches "hand generally over face" cases they don't.
+ */
+function detectHandCoverFace({ hands, faceBox, videoWidth, videoHeight }) {
+  if (!hands || hands.length === 0 || !faceBox || !videoWidth || !videoHeight) return false;
+  const faceCenter = {
+    x: (faceBox.x + faceBox.width / 2) / videoWidth,
+    y: (faceBox.y + faceBox.height / 2) / videoHeight
+  };
+  const COVER_THRESHOLD = 0.15;
+  return hands.some((h) => {
+    const wrist = h && h[0];
+    if (!wrist) return false;
+    return dist2D(wrist, faceCenter) < COVER_THRESHOLD;
+  });
+}
+
+/**
+ * Side Eye: head turned to one side while still facing the camera.
+ * Approximated with MediaPipe Pose by comparing the nose's horizontal
+ * position against the midpoint of the shoulders — a meaningful
+ * offset means the head (and gaze) has turned.
+ */
+function detectSideEye({ pose }) {
+  if (!pose || pose.length < 13) return false;
+  const nose = pose[0];
+  const leftShoulder = pose[11];
+  const rightShoulder = pose[12];
+  if (!nose || !leftShoulder || !rightShoulder) return false;
+  const shoulderMidX = (leftShoulder.x + rightShoulder.x) / 2;
+  const shoulderWidth = Math.abs(leftShoulder.x - rightShoulder.x) || 0.2;
+  const offset = Math.abs(nose.x - shoulderMidX) / shoulderWidth;
+  return offset > 0.22;
+}
+
 // ---------------------------------------------------------------
 // GESTURE REGISTRY
 // ---------------------------------------------------------------
 // Order matters: more specific gestures should be listed before more
 // general ones that could also match the same hand pose (e.g. a finger
 // near the mouth also looks like "index up" — finger_mouth must be
-// checked first so it isn't shadowed).
+// checked first so it isn't shadowed). side_eye is checked last since
+// it's the most general (just a head turn) and shouldn't override a
+// more specific hand gesture happening at the same time.
 const GESTURE_DETECTORS = {
   finger_mouth: detectFingerMouth,
   fingers_together: detectFingersTogether,
   rockstar: detectRockstar,
   fist: detectFist,
+  hand_cover_face: detectHandCoverFace,
   open_palm: detectOpenPalm,
   index_up: detectIndexUp,
   hands_above_head: detectHandsAboveHead,
   hands_beside_face: detectHandsBesideFace,
-  bicep_flex: detectBicepFlex
+  bicep_flex: detectBicepFlex,
+  side_eye: detectSideEye
   // Future gestures (e.g. anime poses) are added here with 1 line:
   // your_gesture: detectYourGesture
 };
@@ -542,7 +610,6 @@ function pickVariant(config) {
     const idx = Math.floor(Math.random() * config.variants.length);
     return config.variants[idx];
   }
-  // Backward-compatible: a config with flat emoji/label/caption/image fields
   return config;
 }
 
@@ -552,10 +619,15 @@ function updateMeme(key) {
 
   const config = MEME_MAP[key] || MEME_CONFIG.expressions.neutral;
   const variant = pickVariant(config);
-  const image = config.image || variant.image; // image lives on the mood, shown for every variant
 
-  if (image) {
-    memeWrap.innerHTML = `<img class="meme-img" src="${image}" alt="${variant.label || key}" />`;
+  if (variant.video) {
+    memeWrap.innerHTML = `
+      <video class="meme-img" autoplay loop muted playsinline>
+        <source src="${variant.video}" />
+      </video>
+    `;
+  } else if (variant.image) {
+    memeWrap.innerHTML = `<img class="meme-img" src="${variant.image}" alt="${variant.label || key}" />`;
   } else {
     memeWrap.innerHTML = `
       <div class="meme-emoji" id="memeEmoji">${variant.emoji || "🙂"}</div>
