@@ -1,23 +1,21 @@
 // ---------------------------------------------------------------
-// MEME & GESTURE CONFIG
+// MEME & GESTURE CONFIG — Cat Meme Edition 🐱
 // ---------------------------------------------------------------
 // 1. expressions: Map facial expressions detected by face-api.js
 // 2. gestures: Map pose gestures detected by MediaPipe Pose/Hands
 //
-// Each expression/gesture now has a `variants` array — every time
-// the mood changes, a random variant from that array is shown, so
-// the same mood doesn't always give you the exact same meme.
-// Each entry also has a `sound` key that maps to a synthesized
-// sound effect in app.js's SOUND_LIBRARY (no audio files needed —
-// see SOUND_LIBRARY in app.js if you want to change how they sound).
+// Each expression/gesture has:
+//   - image: the meme image shown every time this mood is detected
+//   - sound: key into app.js's SOUND_LIBRARY (synthesized, no files needed)
+//   - variants: array of { emoji, label, caption } — a random one is
+//     picked each time the mood changes, so the caption/emoji varies,
+//     but the image (if set) always shows.
 //
-// To add a new gesture meme:
-// Simply add a new entry to `gestures` below (e.g. anime poses)
-// and write a matching detector function in app.js!
+// If a mood has no `image` set, the emoji from the picked variant is
+// shown instead.
 //
-// To add real meme images: drop files into memes/ and add an
-// `image: "memes/yourfile.png"` field to any variant — if present,
-// it's shown instead of the emoji + caption.
+// Drop cat meme images into memes/ using the filenames referenced
+// below (e.g. memes/happy-cat.png) and they'll show automatically.
 // ---------------------------------------------------------------
 
 const MEME_CONFIG = {
@@ -25,63 +23,67 @@ const MEME_CONFIG = {
   expressions: {
     happy: {
       sound: "happy",
+      image: "memes/uwucat.jpg",
       variants: [
-        { emoji: "😂", label: "Happy", caption: "This is fine meme energy", image: "memes/happy.png" },
-        { emoji: "🤣", label: "Happy", caption: "Vibing at 200%" },
-        { emoji: "😹", label: "Happy", caption: "Certified hood classic grin" },
-        { emoji: "🥳", label: "Happy", caption: "It's not stress, it's excitement" },
-        { emoji: "😆", label: "Happy", caption: "Chaotic good energy detected" }
+        { emoji: "😸", label: "Happy", caption: "I can haz good vibes" },
+        { emoji: "😹", label: "Happy", caption: "Certified good boi grin" },
+        { emoji: "🐈", label: "Happy", caption: "Zoomies incoming" },
+        { emoji: "😻", label: "Happy", caption: "Heart-eyes cat mode: ON" },
+        { emoji: "🙀", label: "Happy", caption: "Chaotic good kitty energy" }
       ]
     },
     sad: {
       sound: "sad",
       variants: [
-        { emoji: "😢", label: "Sad", caption: "Crying in the club rn", image: "memes/sad.png" },
-        { emoji: "🥲", label: "Sad", caption: "It's fine. Everything is fine." },
-        { emoji: "😭", label: "Sad", caption: "Sad trombone incoming" },
-        { emoji: "🙁", label: "Sad", caption: "Monday face, but it's not even Monday" }
+        { emoji: "😿", label: "Sad", caption: "Crying cat has entered the chat" },
+        { emoji: "🥲", label: "Sad", caption: "No treats. It's fine. Everything is fine." },
+        { emoji: "😢", label: "Sad", caption: "Sad trombone cat incoming" },
+        { emoji: "🙁", label: "Sad", caption: "Monday face, but make it feline" }
       ]
     },
     angry: {
       sound: "angry",
+      image: "memes/punchcat.jpg",
       variants: [
-        { emoji: "😡", label: "Angry", caption: "Deploying on a Friday energy", image: "memes/angry.png" },
-        { emoji: "🤬", label: "Angry", caption: "When the CI pipeline fails again" },
-        { emoji: "😠", label: "Angry", caption: "Merge conflict rage" },
-        { emoji: "💢", label: "Angry", caption: "Someone touched the thermostat" }
+        { emoji: "😾", label: "Angry", caption: "Grumpy Cat has logged on" },
+        { emoji: "🤬", label: "Angry", caption: "When the food bowl is empty" },
+        { emoji: "😠", label: "Angry", caption: "Hiss. That is all." },
+        { emoji: "💢", label: "Angry", caption: "Someone moved my sunny spot" }
       ]
     },
     surprised: {
       sound: "surprised",
+      image: "memes/huh.png",
       variants: [
-        { emoji: "😲", label: "Surprised", caption: "Surprised Pikachu face", image: "memes/surprised.png" },
-        { emoji: "😳", label: "Surprised", caption: "Wait, WHAT?" },
-        { emoji: "🫨", label: "Surprised", caption: "Plot twist nobody asked for" },
-        { emoji: "😱", label: "Surprised", caption: "The audacity of this bug" }
+        { emoji: "🙀", label: "Surprised", caption: "Surprised cat face, activated" },
+        { emoji: "😳", label: "Surprised", caption: "Wait, WHAT?! (cat version)" },
+        { emoji: "🫨", label: "Surprised", caption: "The cucumber behind me" },
+        { emoji: "😱", label: "Surprised", caption: "Startled kitty jumpscare" }
       ]
     },
     disgusted: {
       sound: "disgusted",
       variants: [
-        { emoji: "🤢", label: "Disgusted", caption: "That's a code smell", image: "memes/disgusted.png" },
-        { emoji: "🤮", label: "Disgusted", caption: "Nested ternaries, why" },
-        { emoji: "😖", label: "Disgusted", caption: "Someone used tabs AND spaces" }
+        { emoji: "🙀", label: "Disgusted", caption: "That's not the fancy feast" },
+        { emoji: "😾", label: "Disgusted", caption: "Sniffed the wrong thing" },
+        { emoji: "😖", label: "Disgusted", caption: "Bath time face" }
       ]
     },
     fearful: {
       sound: "fearful",
       variants: [
-        { emoji: "😨", label: "Fearful", caption: "Production is down", image: "memes/fearful.png" },
-        { emoji: "😰", label: "Fearful", caption: "\"We need to talk\" energy" },
-        { emoji: "🙀", label: "Fearful", caption: "When the boss says 'got a sec?'" }
+        { emoji: "😨", label: "Fearful", caption: "The vacuum cleaner is out" },
+        { emoji: "😰", label: "Fearful", caption: "Vet appointment energy" },
+        { emoji: "🙀", label: "Fearful", caption: "It's bath time isn't it" }
       ]
     },
     neutral: {
       sound: "neutral",
+      image: "memes/pokercat.jpg",
       variants: [
-        { emoji: "😐", label: "Neutral", caption: "Still loading a reaction…", image: "memes/neutral.png" },
-        { emoji: "🫥", label: "Neutral", caption: "Present, but barely" },
-        { emoji: "😶", label: "Neutral", caption: "Poker face activated" }
+        { emoji: "🐱", label: "Neutral", caption: "Judging you silently" },
+        { emoji: "🫥", label: "Neutral", caption: "Present, but barely (cat is aloof)" },
+        { emoji: "😐", label: "Neutral", caption: "Blank stare, deep judgment" }
       ]
     }
   },
@@ -90,23 +92,71 @@ const MEME_CONFIG = {
   gestures: {
     index_up: {
       sound: "shush",
+      image: "memes/shhcat.jpg",
       variants: [
-        { emoji: "☝️", label: "Shush", caption: "Wait / shush…" },
-        { emoji: "🤫", label: "Shush", caption: "Hold that thought" }
+        { emoji: "☝️", label: "Shush", caption: "Ceiling cat is watching" },
+        { emoji: "🤫", label: "Shush", caption: "Hold that thought, hooman" }
       ]
     },
     bicep_flex: {
       sound: "flex",
       variants: [
-        { emoji: "💪", label: "Flex", caption: "We're all gonna make it brahs", image: "memes/zyzz.png" },
-        { emoji: "🦾", label: "Flex", caption: "Gains detected" }
+        { emoji: "💪", label: "Flex", caption: "Buff cat energy, we all gonna make it" },
+        { emoji: "🦾", label: "Flex", caption: "Gains detected (mostly fur)" }
       ]
     },
     finger_mouth: {
       sound: "shook",
       variants: [
-        { emoji: "🙊", label: "Shook", caption: "When the professor says 'pop quiz'", image: "memes/fearful.png" },
-        { emoji: "😬", label: "Shook", caption: "Did I just say that out loud" }
+        { emoji: "🙀", label: "Shook", caption: "When the laser pointer disappears" },
+        { emoji: "😬", label: "Shook", caption: "Knocked the cup off the table on purpose" }
+      ]
+    },
+    fist: {
+      sound: "angry",
+      image: "memes/punchcat.jpg",
+      variants: [
+        { emoji: "😾", label: "Stoic Cat", caption: "Do not pet. Do not speak." },
+        { emoji: "✊", label: "Stoic Cat", caption: "Silent judgment fist" }
+      ]
+    },
+    rockstar: {
+      sound: "flex",
+      variants: [
+        { emoji: "🤘", label: "Rockstar Cat", caption: "Knocking things off shelves since forever" },
+        { emoji: "🎸", label: "Rockstar Cat", caption: "3am zoomies concert tour" }
+      ]
+    },
+    open_palm: {
+      sound: "shook",
+      image: "memes/hand stretched out, palm facing up .jpg",
+      variants: [
+        { emoji: "🖐️", label: "No Monies", caption: "i HAVE NO MONIES for treats" },
+        { emoji: "🤲", label: "No Monies", caption: "Empty paws, empty bowl" }
+      ]
+    },
+    fingers_together: {
+      sound: "shook",
+      image: "memes/fingers together muehehe .jpg",
+      variants: [
+        { emoji: "🤌", label: "Muehehe", caption: "Plotting something. Don't ask." },
+        { emoji: "😼", label: "Muehehe", caption: "Excellent... *steeples paws*" }
+      ]
+    },
+    hands_above_head: {
+      sound: "sad",
+      image: "memes/two hands on head .jpg",
+      variants: [
+        { emoji: "😭", label: "Devastated Cat", caption: "The vet appointment was today" },
+        { emoji: "🙀", label: "Devastated Cat", caption: "They're all out of the good treats" }
+      ]
+    },
+    hands_beside_face: {
+      sound: "fearful",
+      image: "memes/crashout cat .jpg",
+      variants: [
+        { emoji: "😩", label: "Crash Out Cat", caption: "It's not the reaction you think it is" },
+        { emoji: "🫨", label: "Crash Out Cat", caption: "Full meltdown, no notes" }
       ]
     }
   }

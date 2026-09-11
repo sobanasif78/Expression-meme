@@ -291,6 +291,116 @@ function detectFingerMouth({ hands, faceBox, videoWidth, videoHeight }) {
   });
 }
 
+function isThumbExtended(landmarks, margin = 1.15) {
+  const tip = landmarks[4];
+  const ip = landmarks[3];
+  const wrist = landmarks[0];
+  if (!tip || !ip || !wrist) return false;
+  // Thumb moves sideways rather than up/down, so compare distance-from-wrist
+  // of the tip vs the IP joint instead of a simple y-comparison.
+  return dist2D(tip, wrist) > dist2D(ip, wrist) * margin;
+}
+
+function detectFist({ hands }) {
+  if (!hands || hands.length === 0) return false;
+  return hands.some((h) => {
+    if (!h || h.length < 21) return false;
+    const allFingersCurled =
+      isFingerCurled(h, 6, 8) &&
+      isFingerCurled(h, 10, 12) &&
+      isFingerCurled(h, 14, 16) &&
+      isFingerCurled(h, 18, 20);
+    return allFingersCurled && !isThumbExtended(h);
+  });
+}
+
+/**
+ * Rockstar 🤘: thumb + pinky extended, index/middle/ring curled.
+ */
+function detectRockstar({ hands }) {
+  if (!hands || hands.length === 0) return false;
+  return hands.some((h) => {
+    if (!h || h.length < 21) return false;
+    return (
+      isThumbExtended(h) &&
+      isFingerExtended(h, 18, 20) &&
+      isFingerCurled(h, 6, 8) &&
+      isFingerCurled(h, 10, 12) &&
+      isFingerCurled(h, 14, 16)
+    );
+  });
+}
+
+/**
+ * Open Palm ("i have no monies"): all 5 fingers extended, hand held
+ * away from the face (so it doesn't collide with finger_mouth / kidnap-cat).
+ */
+function detectOpenPalm({ hands, faceBox, videoWidth, videoHeight }) {
+  if (!hands || hands.length === 0) return false;
+  return hands.some((h) => {
+    if (!h || h.length < 21) return false;
+    const allExtended =
+      isThumbExtended(h) &&
+      isFingerExtended(h, 6, 8) &&
+      isFingerExtended(h, 10, 12) &&
+      isFingerExtended(h, 14, 16) &&
+      isFingerExtended(h, 18, 20);
+    if (!allExtended) return false;
+    if (faceBox && videoWidth && videoHeight) {
+      const wrist = h[0];
+      const faceCenter = {
+        x: (faceBox.x + faceBox.width / 2) / videoWidth,
+        y: (faceBox.y + faceBox.height / 2) / videoHeight
+      };
+      if (dist2D(wrist, faceCenter) < 0.25) return false; // too close to face
+    }
+    return true;
+  });
+}
+
+/**
+ * Fingers Together ("muehehe"): both hands up with index fingers
+ * extended and their tips touching (classic villain steepled-fingers pose).
+ */
+function detectFingersTogether({ hands }) {
+  if (!hands || hands.length < 2) return false;
+  const bothIndexUp = hands.every((h) => detectIndexUpForHand(h));
+  if (!bothIndexUp) return false;
+  const tip0 = hands[0][8];
+  const tip1 = hands[1][8];
+  if (!tip0 || !tip1) return false;
+  return dist2D(tip0, tip1) < 0.08;
+}
+
+/**
+ * Devastated Cat: both hands raised above the top of the head.
+ * Uses MediaPipe Pose — nose(0), wrists(15,16).
+ */
+function detectHandsAboveHead({ pose }) {
+  if (!pose || pose.length < 17) return false;
+  const nose = pose[0];
+  const leftWrist = pose[15];
+  const rightWrist = pose[16];
+  if (!nose || !leftWrist || !rightWrist) return false;
+  return leftWrist.y < nose.y - 0.05 && rightWrist.y < nose.y - 0.05;
+}
+
+/**
+ * Crash Out Cat: both hands raised beside the face (roughly shoulder-to-nose
+ * height) but NOT above the head — distinguishes it from devastated cat.
+ */
+function detectHandsBesideFace({ pose }) {
+  if (!pose || pose.length < 17) return false;
+  const nose = pose[0];
+  const leftShoulder = pose[11];
+  const rightShoulder = pose[12];
+  const leftWrist = pose[15];
+  const rightWrist = pose[16];
+  if (!nose || !leftShoulder || !rightShoulder || !leftWrist || !rightWrist) return false;
+  const atFaceLevel = (wrist, shoulder) => wrist.y >= nose.y - 0.05 && wrist.y <= shoulder.y + 0.05;
+  return atFaceLevel(leftWrist, leftShoulder) && atFaceLevel(rightWrist, rightShoulder);
+}
+
 // ---------------------------------------------------------------
 // GESTURE REGISTRY
 // ---------------------------------------------------------------
@@ -299,9 +409,15 @@ function detectFingerMouth({ hands, faceBox, videoWidth, videoHeight }) {
 // near the mouth also looks like "index up" — finger_mouth must be
 // checked first so it isn't shadowed).
 const GESTURE_DETECTORS = {
-  bicep_flex: detectBicepFlex,
   finger_mouth: detectFingerMouth,
-  index_up: detectIndexUp
+  fingers_together: detectFingersTogether,
+  rockstar: detectRockstar,
+  fist: detectFist,
+  open_palm: detectOpenPalm,
+  index_up: detectIndexUp,
+  hands_above_head: detectHandsAboveHead,
+  hands_beside_face: detectHandsBesideFace,
+  bicep_flex: detectBicepFlex
   // Future gestures (e.g. anime poses) are added here with 1 line:
   // your_gesture: detectYourGesture
 };
@@ -436,9 +552,10 @@ function updateMeme(key) {
 
   const config = MEME_MAP[key] || MEME_CONFIG.expressions.neutral;
   const variant = pickVariant(config);
+  const image = config.image || variant.image; // image lives on the mood, shown for every variant
 
-  if (variant.image) {
-    memeWrap.innerHTML = `<img class="meme-img" src="${variant.image}" alt="${variant.label || key}" />`;
+  if (image) {
+    memeWrap.innerHTML = `<img class="meme-img" src="${image}" alt="${variant.label || key}" />`;
   } else {
     memeWrap.innerHTML = `
       <div class="meme-emoji" id="memeEmoji">${variant.emoji || "🙂"}</div>
