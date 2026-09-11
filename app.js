@@ -613,22 +613,31 @@ function pickVariant(config) {
   return config;
 }
 
+function pickMedia(config) {
+  if (config.media && config.media.length > 0) {
+    const idx = Math.floor(Math.random() * config.media.length);
+    return config.media[idx];
+  }
+  return null;
+}
+
 function updateMeme(key) {
   if (key === lastDisplayedKey) return;
   lastDisplayedKey = key;
 
   const config = MEME_MAP[key] || MEME_CONFIG.expressions.neutral;
-  const variant = pickVariant(config);
+  const media = pickMedia(config);
 
-  if (variant.video) {
+  if (media && media.video) {
     memeWrap.innerHTML = `
       <video class="meme-img" autoplay loop muted playsinline>
-        <source src="${variant.video}" />
+        <source src="${media.video}" />
       </video>
     `;
-  } else if (variant.image) {
-    memeWrap.innerHTML = `<img class="meme-img" src="${variant.image}" alt="${variant.label || key}" />`;
+  } else if (media && media.image) {
+    memeWrap.innerHTML = `<img class="meme-img" src="${media.image}" alt="${key}" />`;
   } else {
+    const variant = pickVariant(config);
     memeWrap.innerHTML = `
       <div class="meme-emoji" id="memeEmoji">${variant.emoji || "🙂"}</div>
       <div class="meme-label" id="memeLabel">${variant.label || key}</div>

@@ -1,12 +1,14 @@
 // ---------------------------------------------------------------
-// MEME & GESTURE CONFIG — Cat Meme Edition (all memes wired in)
+// MEME & GESTURE CONFIG — Cat Meme Edition
 // ---------------------------------------------------------------
 // Each expression/gesture has:
 //   - sound: key into app.js's SOUND_LIBRARY (synthesized, no files needed)
 //   - how: plain-English instructions shown in the on-screen guide
-//   - variants: array of { emoji, label, caption, image? or video? } —
-//     a random one is picked each time the mood changes. If a variant
-//     has an `image` or `video`, that's shown; otherwise the emoji.
+//   - media: array of { image? or video? } — real cat photos/clips for
+//     this mood. If non-empty, a random one is ALWAYS shown (no emoji
+//     fallback) whenever this mood is active.
+//   - variants: array of { emoji, label, caption } — used for the
+//     emoji+caption fallback ONLY when `media` is empty/missing.
 // ---------------------------------------------------------------
 
 const MEME_CONFIG = {
@@ -14,11 +16,14 @@ const MEME_CONFIG = {
     happy: {
       sound: "happy",
       how: "Smile naturally at the camera",
+      media: [
+        { image: "memes/uwucat.jpg" },
+        { image: "memes/uwucatt.jpg" },
+        { image: "memes/laugh and point .jpg" },
+        { video: "memes/spin cat.mov" }
+      ],
       variants: [
-        { emoji: "😻", label: "Happy", caption: "Heart-eyes cat mode: ON", image: "memes/uwucat.jpg" },
-        { emoji: "😸", label: "Happy", caption: "I can haz good vibes", image: "memes/uwucatt.jpg" },
-        { emoji: "😹", label: "Happy", caption: "Pointing and laughing at you", image: "memes/laugh and point .jpg" },
-        { emoji: "🌀", label: "Happy", caption: "Zoomies engaged", video: "memes/spin cat.mov" }
+        { emoji: "😻", label: "Happy", caption: "Heart-eyes cat mode: ON" }
       ]
     },
     sad: {
@@ -33,26 +38,32 @@ const MEME_CONFIG = {
     angry: {
       sound: "angry",
       how: "Furrow your brows, look angry",
+      media: [
+        { image: "memes/punchcat.jpg" }
+      ],
       variants: [
-        { emoji: "😾", label: "Angry", caption: "Grumpy Cat has logged on", image: "memes/punchcat.jpg" },
-        { emoji: "🤬", label: "Angry", caption: "When the food bowl is empty" },
-        { emoji: "💢", label: "Angry", caption: "Someone moved my sunny spot" }
+        { emoji: "😾", label: "Angry", caption: "Grumpy Cat has logged on" }
       ]
     },
     surprised: {
       sound: "surprised",
       how: "Raise eyebrows, open mouth wide",
+      media: [
+        { image: "memes/huh.png" },
+        { image: "memes/cat.jpg" }
+      ],
       variants: [
-        { emoji: "🙀", label: "Surprised", caption: "Surprised cat face, activated", image: "memes/huh.png" },
-        { emoji: "😳", label: "Surprised", caption: "Wait, WHAT?! (cat version)", image: "memes/cat.jpg" }
+        { emoji: "🙀", label: "Surprised", caption: "Surprised cat face, activated" }
       ]
     },
     disgusted: {
       sound: "disgusted",
       how: "Scrunch your nose like something smells bad",
+      media: [
+        { video: "memes/shaking head .mov" }
+      ],
       variants: [
-        { emoji: "🙅", label: "Disgusted", caption: "Hard no from this cat", video: "memes/shaking head .mov" },
-        { emoji: "😖", label: "Disgusted", caption: "Bath time face" }
+        { emoji: "🙅", label: "Disgusted", caption: "Hard no from this cat" }
       ]
     },
     fearful: {
@@ -66,11 +77,14 @@ const MEME_CONFIG = {
     neutral: {
       sound: "neutral",
       how: "Relaxed, no strong expression",
+      media: [
+        { image: "memes/pokercat.jpg" },
+        { image: "memes/iunno cat.jpg" },
+        { image: "memes/profcat.jpg" },
+        { image: "memes/professorcat.jpg" }
+      ],
       variants: [
-        { emoji: "🐱", label: "Neutral", caption: "Judging you silently", image: "memes/pokercat.jpg" },
-        { emoji: "🤷", label: "Neutral", caption: "Iunno, ask someone else", image: "memes/iunno cat.jpg" },
-        { emoji: "🧑‍🏫", label: "Professor Cat", caption: "Explains why you're wrong", image: "memes/profcat.jpg" },
-        { emoji: "🎓", label: "Professor Cat", caption: "Citation needed", image: "memes/professorcat.jpg" }
+        { emoji: "🐱", label: "Neutral", caption: "Judging you silently" }
       ]
     }
   },
@@ -79,17 +93,21 @@ const MEME_CONFIG = {
     index_up: {
       sound: "shush",
       how: "One hand up, index finger only, tip resting near your mouth",
+      media: [
+        { image: "memes/shhcat.jpg" }
+      ],
       variants: [
-        { emoji: "☝️", label: "Shush", caption: "Ceiling cat is watching", image: "memes/shhcat.jpg" },
-        { emoji: "🤫", label: "Shush", caption: "Hold that thought, hooman" }
+        { emoji: "☝️", label: "Shush", caption: "Ceiling cat is watching" }
       ]
     },
     bicep_flex: {
       sound: "flex",
       how: "Bend an elbow ~90° with your fist at or above shoulder height",
+      media: [
+        { video: "memes/rocky cat.mov" }
+      ],
       variants: [
-        { emoji: "💪", label: "Flex", caption: "Buff cat, we all gonna make it", video: "memes/rocky cat.mov" },
-        { emoji: "🦾", label: "Flex", caption: "Gains detected (mostly fur)" }
+        { emoji: "💪", label: "Flex", caption: "Buff cat, we all gonna make it" }
       ]
     },
     finger_mouth: {
@@ -103,9 +121,11 @@ const MEME_CONFIG = {
     fist: {
       sound: "angry",
       how: "Make a fist with one hand, thumb tucked in",
+      media: [
+        { image: "memes/punchcat.jpg" }
+      ],
       variants: [
-        { emoji: "😾", label: "Stoic Cat", caption: "Do not pet. Do not speak.", image: "memes/punchcat.jpg" },
-        { emoji: "✊", label: "Stoic Cat", caption: "Silent judgment fist" }
+        { emoji: "😾", label: "Stoic Cat", caption: "Do not pet. Do not speak." }
       ]
     },
     rockstar: {
@@ -119,48 +139,63 @@ const MEME_CONFIG = {
     open_palm: {
       sound: "shook",
       how: "Hold one hand up, all 5 fingers spread, away from your face",
+      media: [
+        { image: "memes/hand stretched out, palm facing up .jpg" },
+        { video: "memes/two palms up.mov" }
+      ],
       variants: [
-        { emoji: "🖐️", label: "No Monies", caption: "i HAVE NO MONIES for treats", image: "memes/hand stretched out, palm facing up .jpg" },
-        { emoji: "🤲", label: "No Monies", caption: "Empty paws, empty bowl", video: "memes/two palms up.mov" }
+        { emoji: "🖐️", label: "No Monies", caption: "i HAVE NO MONIES for treats" }
       ]
     },
     fingers_together: {
       sound: "shook",
       how: "Both hands up, index fingers extended, tips touching",
+      media: [
+        { image: "memes/fingers together muehehe .jpg" }
+      ],
       variants: [
-        { emoji: "🤌", label: "Muehehe", caption: "Plotting something. Don't ask.", image: "memes/fingers together muehehe .jpg" },
-        { emoji: "😼", label: "Muehehe", caption: "Excellent... *steeples paws*" }
+        { emoji: "🤌", label: "Muehehe", caption: "Plotting something. Don't ask." }
       ]
     },
     hands_above_head: {
       sound: "sad",
       how: "Raise both hands above the top of your head",
+      media: [
+        { image: "memes/two hands on head .jpg" }
+      ],
       variants: [
-        { emoji: "😭", label: "Devastated Cat", caption: "The vet appointment was today", image: "memes/two hands on head .jpg" },
-        { emoji: "🙀", label: "Devastated Cat", caption: "They're all out of the good treats" }
+        { emoji: "😭", label: "Devastated Cat", caption: "The vet appointment was today" }
       ]
     },
     hands_beside_face: {
       sound: "fearful",
       how: "Raise both hands to face height, beside your head (not above it)",
+      media: [
+        { image: "memes/crashout cat .jpg" }
+      ],
       variants: [
-        { emoji: "😩", label: "Crash Out Cat", caption: "It's not the reaction you think it is", image: "memes/crashout cat .jpg" },
-        { emoji: "🫨", label: "Crash Out Cat", caption: "Full meltdown, no notes" }
+        { emoji: "😩", label: "Crash Out Cat", caption: "It's not the reaction you think it is" }
       ]
     },
     hand_cover_face: {
       sound: "shook",
       how: "Bring one hand up over your face, roughly covering it",
+      media: [
+        { image: "memes/hand cover face .jpg" }
+      ],
       variants: [
-        { emoji: "🙈", label: "Kidnap Cat", caption: "You didn't see anything", image: "memes/hand cover face .jpg" }
+        { emoji: "🙈", label: "Kidnap Cat", caption: "You didn't see anything" }
       ]
     },
     side_eye: {
       sound: "disgusted",
       how: "Turn your head to one side while facing the camera",
+      media: [
+        { image: "memes/side eye cat.jpg" },
+        { image: "memes/side eye.png" }
+      ],
       variants: [
-        { emoji: "👀", label: "Side Eye Cat", caption: "I heard that.", image: "memes/side eye cat.jpg" },
-        { emoji: "😒", label: "Side Eye Cat", caption: "Mmhm. Sure.", image: "memes/side eye.png" }
+        { emoji: "👀", label: "Side Eye Cat", caption: "I heard that." }
       ]
     }
   }
