@@ -387,7 +387,12 @@ function detectOpenPalm({ hands, faceBox, videoWidth, videoHeight }) {
 /**
  * Fingers Together ("muehehe"): both hands up with index fingers
  * extended and their tips touching (classic villain steepled-fingers pose).
+ * Threshold is intentionally generous (0.15) because when the tips
+ * actually touch, MediaPipe's hand tracker often loses precise landmark
+ * accuracy for the overlapping hand.
  */
+const FINGERS_TOGETHER_THRESHOLD = 0.15;
+
 function detectFingersTogether({ hands }) {
   if (!hands || hands.length < 2) return false;
   const bothIndexUp = hands.every((h) => detectIndexUpForHand(h));
@@ -395,8 +400,10 @@ function detectFingersTogether({ hands }) {
   const tip0 = hands[0][8];
   const tip1 = hands[1][8];
   if (!tip0 || !tip1) return false;
-  return dist2D(tip0, tip1) < 0.08;
+  lastFingersTogetherDistance = dist2D(tip0, tip1);
+  return lastFingersTogetherDistance < FINGERS_TOGETHER_THRESHOLD;
 }
+let lastFingersTogetherDistance = null;
 
 /**
  * Devastated Cat: both hands raised above the top of the head.
@@ -787,6 +794,13 @@ async function detectLoop() {
           statusEl.textContent = `Detected: ${faceSummary.confirmed} (${Math.round(faceSummary.confidence * 100)}%)`;
         } else {
           statusEl.textContent = "No face or gesture detected — center yourself in frame";
+        }
+
+        // Debug readout: shows the live fingertip distance for the
+        // muehehe ("fingers_together") gesture whenever 2 hands are
+        // visible, so the threshold can be tuned if it's too strict/loose.
+        if (latestHandsLandmarks && latestHandsLandmarks.length === 2 && lastFingersTogetherDistance !== null) {
+          statusEl.textContent += ` — fingertip dist: ${lastFingersTogetherDistance.toFixed(3)} (need < ${FINGERS_TOGETHER_THRESHOLD})`;
         }
 
         // ---------------------------------------------------------------
